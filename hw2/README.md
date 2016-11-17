@@ -13,3 +13,4 @@ For further comments one can investigate the report inside `evci_utku_a2.zip`.
 - Then use `qlua assign2.lua -mnist` to train the model with default parameters
 - Then use `qlua assign2.lua -cifar` trains a convnet. 
 - You can check available options with `qlua assign2.lua --help`
+-Go profiler folder use `qlua profile-model.lua --model mod.lua --res 1x3x32x32`
