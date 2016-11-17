@@ -1,2 +1,4 @@
 # cvFergus2016
-Homeworks for Computer Vision Class given by Rob Fergus in 2016 Fall
+This repo consists of 3 homeworks given through the Fall 2016 Computer Vision class. 
+
+You can go to each individual folder and check the README.md
