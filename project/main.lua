@@ -3,13 +3,12 @@ require 'optim'
 require 'os'
 require 'xlua'
 
-local mnist = require 'mnist'
 local tnt = require 'torchnet'
 local image = require 'image'
 local optParser = require 'opts'
 --local dbg   = require 'debugger'
 local opt = optParser.parse(arg)
-
+local mnist = require('data.'..opt.data)
 torch.save(opt.logDir ..'/'.. opt.jobID..'.opts', opt)
 torch.manualSeed(opt.manualSeed)
 
