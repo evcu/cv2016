@@ -6,11 +6,13 @@
 #PBS -e localhost:/scratch/ue225/${PBS_JOBNAME}.e${PBS_JOBID}
 #PBS -o localhost:/scratch/ue225/${PBS_JOBNAME}.o${PBS_JOBID}
 
+EPOCHS = 1
+
 cd $PBS_JOBTMP 
 cp -r $HOME/cv2016/project ./
-cd project/
+cd project
 module load torch/gnu/20160623 
-time qlua main.lua  -nEpochs 6 -nThr 8 -model cifar -jobID ${PBS_JOBID}
+time qlua main.lua  -nEpochs $EPOCHS -model lenet5 -jobID ${PBS_JOBID}
 zip -r $PBS_JOBID.zip logs
 curl --upload-file $PBS_JOBID.zip https://transfer.sh/$PBS_JOBID.zip > $HOME/output/$PBS_JOBID
 cp $PBS_JOBID.zip $HOME/output/
