@@ -5,7 +5,7 @@ require 'xlua'
 
 local tnt = require 'torchnet'
 local image = require 'image'
-local optParser = require 'opts'
+local optParser = require 'utils.opts_main'
 --local dbg   = require 'debugger'
 local opt = optParser.parse(arg)
 local mnist = require('data.'..opt.data)
@@ -45,7 +45,8 @@ local testDataset = tnt.ListDataset{
     end
 }
 
-local model = require("models/".. opt.model)
+
+local model = torch.load('inp/'..opt.model..'.t7')
 local engine = tnt.OptimEngine()
 local meter = tnt.AverageValueMeter()
 local criterion = nn.CrossEntropyCriterion()
@@ -60,10 +61,6 @@ engine.hooks.onStart = function(state)
     batch = 1
 end
 
-
-local convergence_file = assert(io.open(opt.logDir ..'/'.. opt.jobID..".log", "w"))
-convergence_file:write("Epoch,TrainError,TestError\n")
-
 engine.hooks.onForwardCriterion = function(state)
     meter:add(state.criterion.output)
     clerr:add(state.network.output, state.sample.target)
@@ -77,42 +74,73 @@ engine.hooks.onForwardCriterion = function(state)
     batch = batch + 1 -- batch increment has to happen here to work for train, val and test.
     timer:incUnit()
 end
+
 engine.hooks.onEnd = function(state)
     print(string.format("%s: avg. loss: %2.4f; avg. error: %2.4f, time: %2.4f",
     mode, meter:value(), clerr:value{k = 1}, timer:value()))
-    convergence_file:write(string.format("%2.4f",clerr:value{k = 1}))
 end
 
-local epoch = 1
-while epoch <= opt.nEpochs do
-    convergence_file:write(tostring(epoch)..",")
-    engine:train{
-        network = model,
-        criterion = criterion,
-        iterator = getIterator(trainDataset),
-        optimMethod = optim.sgd,
-        maxepoch = 1,
-        config = {
-            learningRate = opt.LR,
-            momentum = opt.momentum,
-            learningRateDecay = opt.LRD
-        }
-    }
-    convergence_file:write(",")
+function TestModel(given_model)
     engine:test{
-        network = model,
+        network = given_model,
         criterion = criterion,
         iterator = getIterator(testDataset)
     }
-    print('Done with Epoch '..tostring(epoch))
-    convergence_file:write("\n")
-    epoch = epoch + 1
+    return clerr:value{k = 1}
 end
 
-convergence_file:close()
+function TrainModel(given_model,n_epoch)
+    local epoch = 1
+    while epoch <= n_epoch do
+        engine:train{
+                network = given_model,
+                criterion = criterion,
+                iterator = getIterator(trainDataset),
+                optimMethod = optim.sgd,
+                maxepoch = 1,
+                config = {
+                    learningRate = opt.LR,
+                    momentum = opt.momentum,
+                }
+            }
+
+        engine:test{
+            network = model,
+            criterion = criterion,
+            iterator = getIterator(testDataset)
+        }
+        print('Done with Epoch '..tostring(epoch))
+        epoch = epoch + 1
+    end
+    return clerr:value{k = 1}
+end
+
+
+local pruner = require('utils.pruner')
+pruner:setVariables(model,pruner.maskPercentage,TrainModel,TestModel,engine)
+if opt.LSP ~= 0 then
+    plot_file = assert(io.open(opt.logDir ..'/'..opt.jobID.."-".. opt.l[1]..".plotlog", "w"))
+    plot_file:write("Retained%,TestError\n")
+    for i=0,1,1/opt.LSP do
+        retained,acc = pruner:prune(opt.l,{i})
+        if opt.reTrain then
+            acc = pruner:reTrain(opt.nEpochs)
+        end
+        plot_file:write(retained[1] .. ",".. acc .."\n")
+    end
+    plot_file:close()
+else
+    pruner:prune(opt.l,opt.p)
+    if opt.reTrain then
+        pruner:reTrain(opt.nEpochs)
+    end 
+end
 
 model:clearState()
-torch.save(opt.logDir ..'/'.. opt.jobID..'.t7', model)
+torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned', model)
 
 
-print("The End!")
+
+
+
+
