@@ -60,7 +60,7 @@ function M.parse(arg)
         opt.l = {opt.l}
         opt.p = {opt.p}
     else
-        opt.l , opt.p = readConf('config/'..opt.model..'.conf')
+        opt.l , opt.p = readConf('inp/'..opt.model..'.conf')
     end
     return opt
 end
