@@ -83,7 +83,7 @@ end
 --Mask functions:
 function pruner:maskThreshold(l_i,thres)
 	local ws = self.model:get(l_i).weight
-	local mask = torch.abs(ws):gt(thres):double()
+	local mask = isCuda(torch.abs(ws):gt(thres):double())
 	self.model:get(l_i):setMask(mask)
 	return mask
 end
