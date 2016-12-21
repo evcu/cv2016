@@ -39,6 +39,7 @@ end
 function SpatialConvolution:accGradParameters(input, gradOutput, scale)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    scale = scale or 1
+   print(self.weight:size())
    backCompatibility(self)
    input.THNN.SpatialConvolutionMM_accGradParameters(
       input:cdata(),
