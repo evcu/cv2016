@@ -17,7 +17,7 @@ end
 
 function isCuda(_item)
     if opt.cuda then
-        _item:cuda()
+        _item = _item:cuda()
     end
     return _item
 end

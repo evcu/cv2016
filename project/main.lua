@@ -14,6 +14,13 @@ local mnist = require('data.'..opt.data)
 torch.save(opt.logDir ..'/'.. opt.jobID..'.opts', opt)
 torch.manualSeed(opt.manualSeed)
 
+function isCuda(_item)
+    if opt.cuda then
+        _item = _item:cuda()
+    end
+    return _item
+end
+
 function getIterator(dataset)
         return tnt.DatasetIterator{
             dataset = tnt.BatchDataset{
@@ -30,8 +37,8 @@ local trainDataset = tnt.ShuffleDataset{
         list = torch.range(1, trainset.data:size(1)):long(),
         load = function(idx)
             return {
-                input =  trainset.data[{{idx},{},{}}]:double():div(256),
-                target = torch.LongTensor({trainset.label[idx]+1})
+                input =  isCuda(trainset.data[{{idx},{},{}}]:double():div(256)),
+                target = isCuda(torch.LongTensor({trainset.label[idx]+1}))
             }
         end
         }
@@ -41,17 +48,17 @@ local testDataset = tnt.ListDataset{
     list = torch.range(1, testset.data:size(1)):long(),
     load = function(idx)
         return {
-            input =  testset.data[{{idx},{},{}}]:double():div(256),
-            target = torch.LongTensor({testset.label[idx]+1})
+            input =  isCuda(testset.data[{{idx},{},{}}]:double():div(256)),
+            target = isCuda(torch.LongTensor({testset.label[idx]+1}))
         }
     end
 }
 
 
-local model = torch.load('inp/'..opt.model..'.t7')
+local model = isCuda(torch.load('inp/'..opt.model..'.t7'))
 local engine = tnt.OptimEngine()
 local meter = tnt.AverageValueMeter()
-local criterion = nn.CrossEntropyCriterion()
+local criterion = isCuda(nn.CrossEntropyCriterion())
 local clerr = tnt.ClassErrorMeter{topk = {1}}
 local timer = tnt.TimeMeter()
 local batch = 1
