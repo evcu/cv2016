@@ -17,6 +17,8 @@ function M.parse(arg)
     cmd:option('-data',            'mnist',             'Dataset generation')
     cmd:option('-jobID',            'localTrain',             'Dataset generation')
     cmd:option('-verbose',          'false',        'Print stats for every batch')
+    cmd:option('-cuda',          'false',        'Print stats for every batch')
+
     local opt = cmd:parse(arg or {})
     return opt
 end

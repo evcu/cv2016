@@ -26,12 +26,10 @@ end
 
 function pruner:prune(module_nos,param)
 	local perc = torch.Tensor(#module_nos)
-	self.masks = {}
 	for i=1,#module_nos do
-		self.masks[module_nos[i]] = self:f_pruner(module_nos[i],param[i])
+		local mask = self:f_pruner(module_nos[i],param[i])
 		local ws = self.model:get(module_nos[i]).weight
-		ws:cmul(self.masks[module_nos[i]])
-		local retained = torch.sum(self.masks[module_nos[i]])/torch.numel(ws)
+		local retained = torch.sum(mask)/torch.numel(ws)
 	    if verbose then
 	    	print('Module'..module_nos[i] ..': '.. retained*100 ..'% retained')
 	    end
@@ -42,22 +40,8 @@ function pruner:prune(module_nos,param)
 end
 
 function pruner:reTrain(nEpochs)
-	self.engine.hooks.onBackward = self:getOnBackwardPruner() -- get recent mask
 	res = self.f_train(self.model,nEpochs)
 	return res
-end
-
-
-function pruner:getOnBackwardPruner()
-	bfun = function(state)
-		    for k,v in pairs(self.masks) do
-				state.network:get(k).gradWeight:cmul(v)
-				if verbose then
-					--print('Layer'..k..': Gradprunned\n')
-		        end
-			end
-		end
-	return bfun
 end
 
 function pruner:getConnectionDiv(c_w,i)
@@ -100,17 +84,16 @@ end
 function pruner:maskThreshold(l_i,thres)
 	local ws = self.model:get(l_i).weight
 	local mask = torch.abs(ws):gt(thres):double()
+	self.model:get(l_i):setMask(mask)
 	return mask
 end
 
 function pruner:maskPercentage(l_i,del_p)
-	local ws = self.model:get(l_i).weight
-			local dbg   = require 'debugger'
- 		dbg()
+	local layer = self.model:get(l_i)
 	if del_p == 0 then
 		 thres = -math.huge 
 	else
-	    local sorted = torch.sort(torch.abs(ws:view(-1)))
+	    local sorted = torch.sort(torch.abs(layer.weight:view(-1)))
 	     thres = sorted[sorted:size(1)*del_p]
 	end
 	return self:maskThreshold(l_i,thres)

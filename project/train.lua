@@ -11,6 +11,15 @@ local opt = optParser.parse(arg)
 local mnist = require('data.'..opt.data)
 torch.save(opt.logDir ..'/'.. opt.jobID..'.opts_train', opt)
 torch.manualSeed(opt.manualSeed)
+if opt.cuda then
+    require 'cunn'
+end
+
+function isCuda(_item)
+    if opt.cuda then
+        _item:cuda()
+    end
+end
 
 function getIterator(dataset)
         return tnt.DatasetIterator{
@@ -28,7 +37,7 @@ local trainDataset = tnt.ShuffleDataset{
         list = torch.range(1, trainset.data:size(1)):long(),
         load = function(idx)
             return {
-                input =  trainset.data[{{idx},{},{}}]:double():div(256),
+                input =  isCuda(trainset.data[{{idx},{},{}}]:double():div(256)),
                 target = torch.LongTensor({trainset.label[idx]+1})
             }
         end
@@ -39,14 +48,14 @@ local testDataset = tnt.ListDataset{
     list = torch.range(1, testset.data:size(1)):long(),
     load = function(idx)
         return {
-            input =  testset.data[{{idx},{},{}}]:double():div(256),
+            input =  isCuda(testset.data[{{idx},{},{}}]:double():div(256)),
             target = torch.LongTensor({testset.label[idx]+1})
         }
     end
 }
 
 
-local model = require("models/".. opt.model)
+local model = isCuda(require("models/".. opt.model))
 local engine = tnt.OptimEngine()
 local meter = tnt.AverageValueMeter()
 local criterion = nn.CrossEntropyCriterion()
