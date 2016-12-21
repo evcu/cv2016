@@ -1,6 +1,4 @@
-local Linear = nn['Linear']
--- local dbg = require 'debugger'
--- dbg()
+local Linear = nn.Linear
 function Linear:setMask(mask)
    if self.weight:isSameSizeAs(mask) then
       self.mask = mask
@@ -14,7 +12,13 @@ function Linear:removeMask(mask)
       self.mask = nil
 end
 
-
+local function updateAddBuffer(self, input)
+   local nframe = input:size(1)
+   self.addBuffer = self.addBuffer or input.new()
+   if self.addBuffer:nElement() ~= nframe then
+      self.addBuffer:resize(nframe):fill(1)
+   end
+end
 
 function Linear:accGradParameters(input, gradOutput, scale)
    scale = scale or 1

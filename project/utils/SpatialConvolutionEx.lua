@@ -1,5 +1,7 @@
 -- local dbg = require 'debugger'
 -- dbg()
+
+local THNN = require 'nn.THNN'
 local SpatialConvolution = nn.SpatialConvolution
 
 function SpatialConvolution:setMask(mask)
@@ -13,6 +15,25 @@ end
 
 function SpatialConvolution:removeMask(mask)
       self.mask = nil
+end
+
+local function backCompatibility(self)
+   self.finput = self.finput or self.weight.new()
+   self.fgradInput = self.fgradInput or self.weight.new()
+   if self.padding then
+      self.padW = self.padding
+      self.padH = self.padding
+      self.padding = nil
+   else
+      self.padW = self.padW or 0
+      self.padH = self.padH or 0
+   end
+   if self.weight:dim() == 2 then
+      self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
+   end
+   if self.gradWeight and self.gradWeight:dim() == 2 then
+      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
+   end
 end
 
 function SpatialConvolution:accGradParameters(input, gradOutput, scale)
