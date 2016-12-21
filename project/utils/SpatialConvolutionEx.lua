@@ -17,42 +17,9 @@ function SpatialConvolution:removeMask(mask)
       self.mask = nil
 end
 
-local function backCompatibility(self)
-   self.finput = self.finput or self.weight.new()
-   self.fgradInput = self.fgradInput or self.weight.new()
-   if self.padding then
-      self.padW = self.padding
-      self.padH = self.padding
-      self.padding = nil
-   else
-      self.padW = self.padW or 0
-      self.padH = self.padH or 0
-   end
-   if self.weight:dim() == 2 then
-      self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
-   end
-   if self.gradWeight and self.gradWeight:dim() == 2 then
-      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
-   end
-end
-
+local old = SpatialConvolution.accGradParameters
 function SpatialConvolution:accGradParameters(input, gradOutput, scale)
-   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
-   scale = scale or 1
-   print(self.weight:size())
-   backCompatibility(self)
-   input.THNN.SpatialConvolutionMM_accGradParameters(
-      input:cdata(),
-      gradOutput:cdata(),
-      self.gradWeight:cdata(),
-      THNN.optionalTensor(self.gradBias),
-      self.finput:cdata(),
-      self.fgradInput:cdata(),
-      self.kW, self.kH,
-      self.dW, self.dH,
-      self.padW, self.padH,
-      scale
-   )
+   old(self,input, gradOutput, scale)
    if self.mask ~= nil then
       self.gradWeight:cmul(self.mask)
    end
