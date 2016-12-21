@@ -19,6 +19,7 @@ function isCuda(_item)
     if opt.cuda then
         _item:cuda()
     end
+    return _item
 end
 
 function getIterator(dataset)
@@ -38,7 +39,7 @@ local trainDataset = tnt.ShuffleDataset{
         load = function(idx)
             return {
                 input =  isCuda(trainset.data[{{idx},{},{}}]:double():div(256)),
-                target = torch.LongTensor({trainset.label[idx]+1})
+                target = isCuda(torch.LongTensor({trainset.label[idx]+1}))
             }
         end
         }
@@ -49,7 +50,7 @@ local testDataset = tnt.ListDataset{
     load = function(idx)
         return {
             input =  isCuda(testset.data[{{idx},{},{}}]:double():div(256)),
-            target = torch.LongTensor({testset.label[idx]+1})
+            target = isCuda(torch.LongTensor({testset.label[idx]+1}))
         }
     end
 }
@@ -58,7 +59,7 @@ local testDataset = tnt.ListDataset{
 local model = isCuda(require("models/".. opt.model))
 local engine = tnt.OptimEngine()
 local meter = tnt.AverageValueMeter()
-local criterion = nn.CrossEntropyCriterion()
+local criterion = isCuda(nn.CrossEntropyCriterion())
 local clerr = tnt.ClassErrorMeter{topk = {1}}
 local timer = tnt.TimeMeter()
 local batch = 1
@@ -104,7 +105,6 @@ while epoch <= opt.nEpochs do
         config = {
             learningRate = opt.LR,
             momentum = opt.momentum,
-            learningRateDecay = opt.LRD
         }
     }
     convergence_file:write(",")
