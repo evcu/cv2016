@@ -6,6 +6,8 @@ require 'xlua'
 local tnt = require 'torchnet'
 local image = require 'image'
 local optParser = require 'utils.opts_main'
+require 'utils.LinearEx'
+require 'utils.SpatialConvolutionEx'
 --local dbg   = require 'debugger'
 local opt = optParser.parse(arg)
 local mnist = require('data.'..opt.data)
