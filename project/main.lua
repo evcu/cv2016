@@ -143,7 +143,7 @@ if opt.LSP ~= 0 then
 else
     pruner:prune(opt.l,opt.p)
     if opt.reTrain then
-        pruner:reTrain(opt.nEpochs)
+        pruner:reTrainAndTest(opt.nEpochs)
     end 
 end
 
