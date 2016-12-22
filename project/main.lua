@@ -100,7 +100,7 @@ function TestModel(given_model)
     return clerr:value{k = 1}
 end
 
-local wd = (opt.pruner =='l2' ) and 1 or 0
+local wd = (opt.pruner =='l2' ) and 0.01 or 0
 function TrainModel(given_model,n_epoch)
     local epoch = 1
     while epoch <= n_epoch do
