@@ -118,15 +118,10 @@ function TrainModel(given_model,n_epoch)
                 }
             }
 
-        engine:test{
-            network = model,
-            criterion = criterion,
-            iterator = getIterator(testDataset)
-        }
         print('Done with Epoch '..tostring(epoch))
         epoch = epoch + 1
     end
-    return clerr:value{k = 1}
+    return given_model
 end
 
 
@@ -140,7 +135,7 @@ if opt.LSP ~= 0 then
     for i=0,1,1/opt.LSP do
         retained,acc = pruner:prune(opt.l,{i})
         if opt.reTrain then
-            acc = pruner:reTrain(opt.nEpochs)
+            acc = pruner:reTrainAndTest(opt.nEpochs)
         end
         plot_file:write(retained[1] .. ",".. acc .."\n")
     end

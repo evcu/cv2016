@@ -39,9 +39,8 @@ function pruner:prune(module_nos,param)
 	return perc , res
 end
 
-function pruner:reTrain(nEpochs)
-	res = self.f_train(self.model,nEpochs)
-	return res
+function pruner:reTrainAndTest(nEpochs)
+	return self.f_test(self.f_train(self.model,nEpochs))
 end
 
 function pruner:getConnectionDiv(c_w,i)
@@ -109,8 +108,11 @@ function pruner:maskL2(l_i,del_p)
 	self.model:get(l_i).weight:fill(self.IMPORTANCE_INIT)
 	print(self.model:get(l_i).weight[1])--TODO fix this!
 	res = self.f_train(self.model,1) 
+	self.engine.hooks.onSample = nil
+	self.engine.hooks.onBackward = nil
 	print(self.model:get(l_i).weight[1])--TODO fix this!
 	mask = self:maskPercentage(l_i,del_p)
+	print(mask)
 	self.model:get(l_i).weight = initial_weights
 	print(initial_weights[1])	
 	return mask
