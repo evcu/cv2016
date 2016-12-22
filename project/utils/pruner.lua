@@ -24,14 +24,15 @@ function pruner:setVariables(model,f_pruner,f_train,f_test,eng)
 	self.IMPORTANCE_INIT = 1
 end
 
-function pruner:prune(module_nos,param)
-	local perc = torch.Tensor(#module_nos)
-	for i=1,#module_nos do
-		local mask = self:f_pruner(module_nos[i],param[i])
-		local ws = self.model:get(module_nos[i]).weight
+function pruner:prune(layer_nos,param)
+	local perc = torch.Tensor(#layer_nos)
+	for i=1,#layer_nos do
+		local mask = self:f_pruner(layer_nos[i],param[i])
+		self.model:get(layer_nos[i]):setMask(mask)
+		local ws = self.model:get(layer_nos[i]).weight
 		local retained = torch.sum(mask)/torch.numel(ws)
 	    if verbose then
-	    	print('Module'..module_nos[i] ..': '.. retained*100 ..'% retained')
+	    	print('Module'..layer_nos[i] ..': '.. retained*100 ..'% retained')
 	    end
 	    perc[i] = retained
 	end
@@ -84,7 +85,6 @@ end
 function pruner:maskThreshold(l_i,thres)
 	local ws = self.model:get(l_i).weight
 	local mask = isCuda(torch.abs(ws):gt(thres):double())
-	self.model:get(l_i):setMask(mask)
 	return mask
 end
 
@@ -101,6 +101,8 @@ end
 
 function pruner:maskL2(l_i,del_p)
 	initial_weights = self.model:get(l_i).weight:clone()
+	local dbg = require 'debugger'
+	dbg()
 	self.engine.hooks.onSample = self:getConnectionMult(initial_weights,l_i)
 	self.engine.hooks.onBackward = self:getConnectionDiv(initial_weights,l_i)
 	self.model:get(l_i).weight:fill(self.IMPORTANCE_INIT)
@@ -109,8 +111,7 @@ function pruner:maskL2(l_i,del_p)
 	self.engine.hooks.onBackward = function() end
 	mask = self:maskPercentage(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
-	self.model:get(l_i):setMask(mask)
-	local dbg = require 'debugger'
+		local dbg = require 'debugger'
 	dbg()
 	return mask
 end
