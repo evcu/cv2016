@@ -122,9 +122,9 @@ function pruner:maskL1(l_i,del_p)
 	self.engine.hooks.onSample = self:getConnectionMult(initial_weights,l_i)
 	self.engine.hooks.onBackward = self:getConnectionDiv(initial_weights,l_i)
 	self.model:get(l_i).weight:fill(self.IMPORTANCE_INIT)
-	self.model:insert(nn.L1Penalty(1,true),l_i+1)
+	self.model:insert(nn.L1Penalty(1,true),l_i+2)
 	res = self.f_train(self.model,1) 
-	self.model:remove(l_i+1)
+	self.model:remove(l_i+2)
 	self.engine.hooks.onSample = old_onSample
 	self.engine.hooks.onBackward = old_onBackward
 	mask = self:maskPercentage(l_i,del_p)
