@@ -100,6 +100,7 @@ function TestModel(given_model)
     return clerr:value{k = 1}
 end
 
+local wd = (opt.pruner =='l2' ) and 1 or 0
 function TrainModel(given_model,n_epoch)
     local epoch = 1
     while epoch <= n_epoch do
@@ -113,6 +114,7 @@ function TrainModel(given_model,n_epoch)
                 config = {
                     learningRate = opt.LR,
                     momentum = opt.momentum,
+                    weightDecay = wd
                 }
             }
 
@@ -129,7 +131,9 @@ end
 
 
 local pruner = require('utils.pruner')
-pruner:setVariables(model,pruner.maskPercentage,TrainModel,TestModel,engine)
+local prunerFunc = ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
+assert(prunerFunc ~= nil, 'Pruner function can\'t set, fix the code')
+pruner:setVariables(model,prunerFunc,TrainModel,TestModel,engine)
 if opt.LSP ~= 0 then
     plot_file = assert(io.open(opt.logDir ..'/'..opt.jobID.."-".. opt.l[1]..".plotlog", "w"))
     plot_file:write("Retained%,TestError\n")
