@@ -134,7 +134,7 @@ function pruner:CalculateHessianValues(given_model)
     engine:train{
         network = given_model,
         criterion = criterion,
-        iterator = getIterator(testDataset)
+        iterator = getIterator(testDataset),
         optimMethod = optim.sgd,
             maxepoch = 1,
             config = {
