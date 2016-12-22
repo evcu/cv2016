@@ -129,9 +129,22 @@ function pruner:maskL1(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
 end
 
-function pruner:maskTaylor2(l_i,del_p)
+function pruner:CalculateHessianValues(given_model)
 	nn.hessian.enable()
-	res = self.f_test(self.model) 
+    engine:train{
+        network = given_model,
+        criterion = criterion,
+        iterator = getIterator(testDataset)
+        optimMethod = optim.sgd,
+            maxepoch = 1,
+            config = {
+                learningRate = 0, --no learning just hessian calculation
+            }
+    }
+end
+
+function pruner:maskTaylor2(l_i,del_p)
+	res = self.CalculateHessianValues(self.model) 
 		local dbg = require 'debugger'
 	dbg()
 	mask = self:maskPercentage(l_i,del_p)
