@@ -57,7 +57,7 @@ end
 function pruner:getConnectionMult(c_w,i)
 	bfun = function(state)
 			print('getConnectionMult')
-			print(state.model:get(i).weight[1])--TODO fix this!
+			print(state.network:get(i).weight[1])--TODO fix this!
 			state.network:get(i).weight:cmul(c_w)
 			if verbose then
 				--print('Layer'..k..': Weight multiplied\n')
