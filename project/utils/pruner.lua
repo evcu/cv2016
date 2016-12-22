@@ -29,6 +29,8 @@ function pruner:prune(layer_nos,param)
 	for i=1,#layer_nos do
 		local mask = self:f_pruner(layer_nos[i],param[i])
 		self.model:get(layer_nos[i]):setMask(mask)
+			local dbg = require 'debugger'
+	dbg()
 		local ws = self.model:get(layer_nos[i]).weight
 		local retained = torch.sum(mask)/torch.numel(ws)
 	    if verbose then
@@ -101,8 +103,6 @@ end
 
 function pruner:maskL2(l_i,del_p)
 	initial_weights = self.model:get(l_i).weight:clone()
-	local dbg = require 'debugger'
-	dbg()
 	self.engine.hooks.onSample = self:getConnectionMult(initial_weights,l_i)
 	self.engine.hooks.onBackward = self:getConnectionDiv(initial_weights,l_i)
 	self.model:get(l_i).weight:fill(self.IMPORTANCE_INIT)
