@@ -131,7 +131,7 @@ end
 
 function pruner:CalculateHessianValues(given_model)
 	nn.hessian.enable()
-    engine:train{
+    self.engine:train{
         network = given_model,
         criterion = criterion,
         iterator = getIterator(testDataset),
