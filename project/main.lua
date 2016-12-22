@@ -58,7 +58,7 @@ local testDataset = tnt.ListDataset{
 
 
 local model = isCuda(torch.load('inp/'..opt.model..'.t7'))
-local engine = tnt.OptimEngine()
+engine = tnt.OptimEngine()
 local meter = tnt.AverageValueMeter()
 local criterion = isCuda(nn.CrossEntropyCriterion())
 local clerr = tnt.ClassErrorMeter{topk = {1}}
@@ -99,6 +99,8 @@ function TestModel(given_model)
     }
     return clerr:value{k = 1}
 end
+
+
 
 function TrainModel(given_model,n_epoch)
     local epoch = 1
