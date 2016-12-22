@@ -55,11 +55,10 @@ function pruner:getConnectionDiv(c_w,i)
 end
 function pruner:getConnectionMult(c_w,i)
 	bfun = function(state)
-			print('getConnectionMult')
-			print(state.network:get(i).weight[1])--TODO fix this!
 			state.network:get(i).weight:cmul(c_w)
 			if verbose then
-				--print('Layer'..k..': Weight multiplied\n')
+				-- print('getConnectionMult')
+				-- print(state.network:get(i).weight[1])--TODO fix this!
 	        end
 		end
 	return bfun
@@ -102,19 +101,14 @@ end
 
 function pruner:maskL2(l_i,del_p)
 	initial_weights = self.model:get(l_i).weight:clone()
-	print(initial_weights[1])
 	self.engine.hooks.onSample = self:getConnectionMult(initial_weights,l_i)
 	self.engine.hooks.onBackward = self:getConnectionDiv(initial_weights,l_i)
 	self.model:get(l_i).weight:fill(self.IMPORTANCE_INIT)
-	print(self.model:get(l_i).weight[1])--TODO fix this!
 	res = self.f_train(self.model,1) 
 	self.engine.hooks.onSample = function() end
 	self.engine.hooks.onBackward = function() end
-	print(self.model:get(l_i).weight[1])--TODO fix this!
 	mask = self:maskPercentage(l_i,del_p)
-	print(mask)
 	self.model:get(l_i).weight = initial_weights
-	print(initial_weights[1])	
 	return mask
 end
 
