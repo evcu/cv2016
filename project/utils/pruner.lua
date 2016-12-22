@@ -29,10 +29,7 @@ function pruner:prune(layer_nos,param)
 	for i=1,#layer_nos do
 		local mask = self:f_pruner(layer_nos[i],param[i])
 		self.model:get(layer_nos[i]):setMask(mask)
-			local dbg = require 'debugger'
-	dbg()
-		local ws = self.model:get(layer_nos[i]).weight
-		local retained = torch.sum(mask)/torch.numel(ws)
+		local retained = torch.sum(mask)/torch.numel(mask)
 	    if verbose then
 	    	print('Module'..layer_nos[i] ..': '.. retained*100 ..'% retained')
 	    end
@@ -43,6 +40,8 @@ function pruner:prune(layer_nos,param)
 end
 
 function pruner:reTrainAndTest(nEpochs)
+	local dbg = require 'debugger'
+	dbg()
 	return self.f_test(self.f_train(self.model,nEpochs))
 end
 
