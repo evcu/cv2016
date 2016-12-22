@@ -124,7 +124,7 @@ end
 
 
 local pruner = require('utils.pruner')
-local prunerFunc = ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
+local prunerFunc = ((opt.pruner =='l1') and pruner.maskL1) or ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
 assert(prunerFunc ~= nil, 'Pruner function can\'t set, fix the code')
 pruner:setVariables(model,prunerFunc,TrainModel,TestModel,engine)
 if opt.LSP ~= 0 then
