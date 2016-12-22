@@ -109,6 +109,8 @@ function pruner:maskL2(l_i,del_p)
 	self.engine.hooks.onBackward = function() end
 	mask = self:maskPercentage(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
+	local dbg = require 'debugger'
+	dbg()
 	return mask
 end
 
