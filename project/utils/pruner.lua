@@ -99,7 +99,7 @@ end
 
 --Mask functions:
 function pruner:maskPercentage(l_i,del_p)
-	local layer = self.model:get(l_i)
+	local layer = self.model:get(l_i).weight
 	return self:getPercentage(layer,del_p)
 end
 
