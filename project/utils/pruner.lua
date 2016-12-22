@@ -129,7 +129,7 @@ function pruner:maskL1(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
 end
 
-function pruner:maskHessian(l_i,del_p)
+function pruner:maskTaylor2(l_i,del_p)
 	nn.hessian.enable()
 	res = self.f_test(self.model) 
 		local dbg = require 'debugger'
