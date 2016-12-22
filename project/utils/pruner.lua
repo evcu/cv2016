@@ -15,11 +15,11 @@ local verbose = 1
 -- 	return perc
 -- end
 
-function pruner:setVariables(model,f_pruner,f_train,f_test,eng)
+function pruner:setVariables(model,f_pruner,f_train,f_test,f_hessian)
 	self.f_train = f_train
 	self.f_pruner = f_pruner
 	self.f_test = f_test
-	self.engine = eng
+	self.f_hessian = f_hessian
 	self.model = model
 	self.IMPORTANCE_INIT = 1
 end
@@ -129,22 +129,9 @@ function pruner:maskL1(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
 end
 
-function pruner:CalculateHessianValues(given_model)
-	nn.hessian.enable()
-    self.engine:train{
-        network = given_model,
-        criterion = criterion,
-        iterator = getIterator(testDataset),
-        optimMethod = optim.sgd,
-            maxepoch = 1,
-            config = {
-                learningRate = 0, --no learning just hessian calculation
-            }
-    }
-end
 
 function pruner:maskTaylor2(l_i,del_p)
-	res = self.CalculateHessianValues(self.model) 
+	res = self.f_hessian(self.model) 
 		local dbg = require 'debugger'
 	dbg()
 	mask = self:maskPercentage(l_i,del_p)

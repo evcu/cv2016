@@ -58,7 +58,7 @@ local testDataset = tnt.ListDataset{
 
 
 local model = isCuda(torch.load('inp/'..opt.model..'.t7'))
-engine = tnt.OptimEngine()
+local engine = tnt.OptimEngine()
 local meter = tnt.AverageValueMeter()
 local criterion = isCuda(nn.CrossEntropyCriterion())
 local clerr = tnt.ClassErrorMeter{topk = {1}}
@@ -100,7 +100,19 @@ function TestModel(given_model)
     return clerr:value{k = 1}
 end
 
-
+function CalculateHessianValues(given_model)
+    nn.hessian.enable()
+    engine:train{
+        network = given_model,
+        criterion = criterion,
+        iterator = getIterator(testDataset),
+        optimMethod = optim.sgd,
+            maxepoch = 1,
+            config = {
+                learningRate = 0, --no learning just hessian calculation
+            }
+    }
+end
 
 function TrainModel(given_model,n_epoch)
     local epoch = 1
@@ -128,7 +140,7 @@ end
 local pruner = require('utils.pruner')
 local prunerFunc = ((opt.pruner =='taylor2') and pruner.maskTaylor2) or ((opt.pruner =='l1') and pruner.maskL1) or ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
 assert(prunerFunc ~= nil, 'Pruner function can\'t set, fix the code')
-pruner:setVariables(model,prunerFunc,TrainModel,TestModel,engine)
+pruner:setVariables(model,prunerFunc,TrainModel,TestModel,CalculateHessianValues)
 if opt.LSP ~= 0 then
     plot_file = assert(io.open(opt.logDir ..'/'..opt.jobID.."-".. opt.l[1]..".plotlog", "w"))
     plot_file:write("Retained%,TestError\n")
