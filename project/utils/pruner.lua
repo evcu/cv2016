@@ -82,26 +82,29 @@ function pruner:calculateCompression()
 	return czero/ctotal
 end
 
---Mask functions:
-function pruner:maskThreshold(l_i,thres)
-	local ws = self.model:get(l_i).weight
-	local mask = isCuda(torch.abs(ws):gt(thres):double())
+function pruner:getThreshold(scores,thres)
+	local mask = isCuda(torch.abs(scores):gt(thres):double())
 	return mask
 end
 
-function pruner:maskPercentage(l_i,del_p)
-	local layer = self.model:get(l_i)
+function pruner:getPercentage(scores,del_p)
 	if del_p == 0 then
 		 thres = -math.huge 
 	else
-	    local sorted = torch.sort(torch.abs(layer.weight:view(-1)))
+	    local sorted = torch.sort(torch.abs(scores:view(-1)))
 	     thres = sorted[sorted:size(1)*del_p]
 	end
-	return self:maskThreshold(l_i,thres)
+	return self:getThreshold(scores,thres)
+end
+
+--Mask functions:
+function pruner:maskPercentage(l_i,del_p)
+	local layer = self.model:get(l_i)
+	return self:getPercentage(layer,del_p)
 end
 
 function pruner:maskL2(l_i,del_p)
-	initial_weights = self.model:get(l_i).weight:clone()
+	initial_weights = isCuda(self.model:get(l_i).weight:clone())
 	self.engine.hooks.onSample = self:getConnectionMult(initial_weights,l_i)
 	self.engine.hooks.onBackward = self:getConnectionDiv(initial_weights,l_i)
 	self.model:get(l_i).weight:fill(self.IMPORTANCE_INIT)
@@ -114,7 +117,7 @@ function pruner:maskL2(l_i,del_p)
 end
 
 function pruner:maskL1(l_i,del_p)
-	initial_weights = self.model:get(l_i).weight:clone()
+	initial_weights = isCuda(self.model:get(l_i).weight:clone())
 	old_onSample = self.engine.hooks.onSample 
 	old_onBackward = self.engine.hooks.onBackward 
 	self.engine.hooks.onSample = self:getConnectionMult(initial_weights,l_i)
@@ -127,6 +130,7 @@ function pruner:maskL1(l_i,del_p)
 	self.engine.hooks.onBackward = old_onBackward
 	mask = self:maskPercentage(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
+	return mask
 end
 
 
@@ -136,6 +140,12 @@ function pruner:maskTaylor2(l_i,del_p)
 	dbg()
 	mask = self:maskPercentage(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
+	return mask
 end
 
+function pruner:maskTaylor1(l_i,del_p)
+	local scores = isCuda(self.model:get(l_i).weight:clone())
+	scores:cmul(self.model:get(l_i).gradWeight)
+	return self:getPercentage(scores,del_p)
+end
 return pruner
