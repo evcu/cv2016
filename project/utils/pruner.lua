@@ -110,8 +110,6 @@ function pruner:maskL2(l_i,del_p)
 	self.engine.hooks.onBackward = function() end
 	mask = self:maskPercentage(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
-		local dbg = require 'debugger'
-	dbg()
 	return mask
 end
 
@@ -131,5 +129,13 @@ function pruner:maskL1(l_i,del_p)
 	self.model:get(l_i).weight = initial_weights
 end
 
+function pruner:maskHessian(l_i,del_p)
+	nn.hessian.enable()
+	res = self.f_test(self.model) 
+		local dbg = require 'debugger'
+	dbg()
+	mask = self:maskPercentage(l_i,del_p)
+	self.model:get(l_i).weight = initial_weights
+end
 
 return pruner
