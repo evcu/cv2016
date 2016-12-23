@@ -17,7 +17,7 @@ cp -r $HOME/cv2016/project ./
 cd project
 module load torch/gnu/20160623 
 
-time qlua main.lua  -reTrain -reLoad -cuda -nEpochs $EPOCHS -iPruning $NITER -jobID ${PBS_JOBID}-$l
+time qlua main.lua  -reTrain -cuda -nEpochs $EPOCHS -iPruning $NITER -jobID ${PBS_JOBID}-$l
 
 zip -r $PBS_JOBID.zip logs
 curl --upload-file $PBS_JOBID.zip https://transfer.sh/$PBS_JOBID.zip > $OUT_FOLDER/$PBS_JOBID

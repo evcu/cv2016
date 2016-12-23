@@ -58,6 +58,8 @@ local testDataset = tnt.ListDataset{
 local model
 if opt.test then
     model = isCuda(torch.load('logs/'..opt.model..'.t7pruned'))
+elseif opt.train then
+    model = isCuda(require("models/".. opt.model))
 else
     model = isCuda(torch.load('inp/'..opt.model..'.t7'))
 end
@@ -186,8 +188,7 @@ plot_file:close()
 
 --print(pruner:calculateCompression())
 model:clearState()
-torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned.f', model)
-torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned.d', model)
+torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned', model)
 
 
 

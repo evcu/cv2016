@@ -59,6 +59,7 @@ function M.parse(arg)
     cmd:option('-verbose',          false,        'Print stats for every batch')
     cmd:option('-cuda',          false,        'Print stats for every batch')
     cmd:option('-test',          false,        'Test pruned networks')
+    cmd:option('-train',          false,        'Test pruned networks')
 
 
     local opt = cmd:parse(arg or {})
