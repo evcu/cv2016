@@ -19,8 +19,6 @@ end
 function isCuda(_item)
     if opt.cuda then
         _item = _item:cuda()
-    else
-        _item = _item:double()
     end
     return _item
 end
@@ -57,11 +55,11 @@ local testDataset = tnt.ListDataset{
         }
     end
 }
-
+local model
 if opt.test then
-    local model = isCuda(torch.load('logs/'..opt.model..'.t7pruned'))
+    model = isCuda(torch.load('logs/'..opt.model..'.t7pruned'))
 else
-    local model = isCuda(torch.load('inp/'..opt.model..'.t7'))
+    model = isCuda(torch.load('inp/'..opt.model..'.t7'))
 end
 local engine = tnt.OptimEngine()
 local meter = tnt.AverageValueMeter()
@@ -143,16 +141,16 @@ end
 
 local init_acc = TestModel(model)
 local pruner = require('utils.pruner')
-if opt.test then
-    isCuda(torch.load('inp/'..opt.model..'.t7'))
-    print('Total Compression: '..pruner:calculateCompression())
-    print('Accuracy: '..init_acc)
-    os.exit()
-end
 
 local prunerFunc = ((opt.pruner =='emp') and pruner.maskEmprical) or ((opt.pruner =='taylor1') and pruner.maskTaylor1) or ((opt.pruner =='taylor2') and pruner.maskTaylor2) or ((opt.pruner =='l1') and pruner.maskL1) or ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
 assert(prunerFunc ~= nil, 'Pruner function can\'t set, fix the code')
 pruner:setVariables(model,prunerFunc,TrainModel,TestModel,CalculateHessianValues)
+
+if opt.test then
+    print('Total Compression: '..pruner:calculateCompression())
+    print('Accuracy: '..init_acc)
+    os.exit()
+end
 
 plot_file = assert(io.open(opt.logDir ..'/'..opt.jobID..".plotlog", "w"))
 plot_file:write("LayerNo,Retained%,TestError\n")
@@ -188,8 +186,8 @@ plot_file:close()
 
 --print(pruner:calculateCompression())
 model:clearState()
-torch.save(opt.logDir ..'/'.. opt.model:float()..'.t7pruned.f', model)
-torch.save(opt.logDir ..'/'.. opt.model:double()..'.t7pruned.d', model)
+torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned.f', model)
+torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned.d', model)
 
 
 
