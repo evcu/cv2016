@@ -45,7 +45,7 @@ function pruner:pruneLayer(layer_no,p)
 	self.model:get(layer_no):setMask(mask)
 	local retained = torch.sum(mask)/torch.numel(mask)
     if verbose then
-    	print('Module'.. layer_no ..': '.. retained*100 ..'% retained')
+    	print('Layer'.. layer_no ..': '.. retained*100 ..'% retained')
     end
 	local res = self.f_test(self.model)
 	return retained , res, oldmask

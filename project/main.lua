@@ -142,20 +142,20 @@ local prunerFunc = ((opt.pruner =='taylor1') and pruner.maskTaylor1) or ((opt.pr
 assert(prunerFunc ~= nil, 'Pruner function can\'t set, fix the code')
 pruner:setVariables(model,prunerFunc,TrainModel,TestModel,CalculateHessianValues)
 
-i=1
 plot_file = assert(io.open(opt.logDir ..'/'..opt.jobID..".plotlog", "w"))
 plot_file:write("LayerNo,Retained%,TestError\n")
 
+i=1
 while i <= opt.iPruning do
     local current_p
     for l,p in pairs(opt.l) do
         current_p = (p/opt.iPruning)*i
         retained,acc,oldmask = pruner:pruneLayer(l,current_p)
         if opt.reTrain then
+            acc = pruner:reTrainAndTest(opt.nEpochs)
             if opt.reLoad then
                 pruner.model = isCuda(torch.load('inp/'..opt.model..'.t7'))
             end
-        acc = pruner:reTrainAndTest(opt.nEpochs)
         end
         if acc<(init_acc-opt.acctradeoff) then --We can't tolerate that
             pruner:revertMask(l,oldmask)
@@ -170,6 +170,7 @@ while i <= opt.iPruning do
     end
     i = i + 1
 end
+print('Total Compression: '..pruner:calculateCompression())
 plot_file:close()
 
 

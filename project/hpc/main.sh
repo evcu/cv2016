@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -l nodes=1:ppn=16,walltime=30:00,mem=8GB
+#PBS -l nodes=1:ppn=1:gpus=1,walltime=9:30:00,mem=8GB
 #PBS -N cvTrial1
 #PBS -M ue225@nyu.edu
 #PBS -m abe
@@ -7,7 +7,7 @@
 #PBS -o localhost:/scratch/ue225/${PBS_JOBNAME}.o${PBS_JOBID}
 
 EPOCHS=3
-NSAMPLE=3
+NITER=20
 LAYERS=(1 4 8 10 12)
 
 OUT_FOLDER=$HOME/cv2016/out
@@ -20,7 +20,7 @@ module load torch/gnu/20160623
 
 for l in "${LAYERS[@]}"
 do 
-	time qlua main.lua  -nEpochs $EPOCHS -LSP $NSAMPLE -l $l -model lenet5 -jobID ${PBS_JOBID}
+	time qlua main.lua  -reTrain -reLoad -cuda -nEpochs $EPOCHS -iPruning $NITER -l $l 0.95 -model lenet5 -jobID ${PBS_JOBID}
 done
 
 zip -r $PBS_JOBID.zip logs
