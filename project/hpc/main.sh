@@ -20,7 +20,7 @@ module load torch/gnu/20160623
 
 for l in "${LAYERS[@]}"
 do 
-	time qlua main.lua  -reTrain -reLoad -cuda -nEpochs $EPOCHS -iPruning $NITER -l $l 0.95 -model lenet5 -jobID ${PBS_JOBID}
+	time qlua main.lua  -reTrain -reLoad -cuda -nEpochs $EPOCHS -iPruning $NITER -l $l -p 1 -model lenet5 -jobID ${PBS_JOBID}-$l
 done
 
 zip -r $PBS_JOBID.zip logs
