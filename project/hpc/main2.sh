@@ -7,7 +7,7 @@
 #PBS -o localhost:/scratch/ue225/${PBS_JOBNAME}.o${PBS_JOBID}
 
 EPOCHS=1
-NSAMPLE=40
+NITER=40
 
 OUT_FOLDER=$HOME/cv2016/out
 LOG_FOLDER=$SCRATCH/cvproj/
@@ -17,7 +17,7 @@ cp -r $HOME/cv2016/project ./
 cd project
 module load torch/gnu/20160623 
 
-time qlua main.lua  -reTrain -nEpochs $EPOCHS -LSP $NSAMPLE -jobID ${PBS_JOBID}
+time qlua main.lua  -reTrain -reLoad -cuda -nEpochs $EPOCHS -iPruning $NITER -jobID ${PBS_JOBID}-$l
 
 zip -r $PBS_JOBID.zip logs
 curl --upload-file $PBS_JOBID.zip https://transfer.sh/$PBS_JOBID.zip > $OUT_FOLDER/$PBS_JOBID
