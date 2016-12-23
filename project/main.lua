@@ -97,7 +97,7 @@ function TestModel(given_model)
         criterion = criterion,
         iterator = getIterator(testDataset)
     }
-    return clerr:value{k = 1}
+    return clerr:value{k = 1},meter:value()
 end
 
 function CalculateHessianValues(given_model)
@@ -138,7 +138,7 @@ end
 
 local init_acc = TestModel(model)
 local pruner = require('utils.pruner')
-local prunerFunc = ((opt.pruner =='taylor1') and pruner.maskTaylor1) or ((opt.pruner =='taylor2') and pruner.maskTaylor2) or ((opt.pruner =='l1') and pruner.maskL1) or ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
+local prunerFunc = ((opt.pruner =='emp') and pruner.maskEmprical) or ((opt.pruner =='taylor1') and pruner.maskTaylor1) or ((opt.pruner =='taylor2') and pruner.maskTaylor2) or ((opt.pruner =='l1') and pruner.maskL1) or ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
 assert(prunerFunc ~= nil, 'Pruner function can\'t set, fix the code')
 pruner:setVariables(model,prunerFunc,TrainModel,TestModel,CalculateHessianValues)
 

@@ -120,6 +120,7 @@ function pruner:maskPercentage(l_i,del_p)
 end
 
 function pruner:maskL2(l_i,del_p)
+	--TODO
 	initial_weights = isCuda(self.model:get(l_i).weight:clone())
 	self.engine.hooks.onSample = self:getConnectionMult(initial_weights,l_i)
 	self.engine.hooks.onBackward = self:getConnectionDiv(initial_weights,l_i)
@@ -133,6 +134,7 @@ function pruner:maskL2(l_i,del_p)
 end
 
 function pruner:maskL1(l_i,del_p)
+	--TODO
 	initial_weights = isCuda(self.model:get(l_i).weight:clone())
 	old_onSample = self.engine.hooks.onSample 
 	old_onBackward = self.engine.hooks.onBackward 
@@ -151,6 +153,8 @@ end
 
 
 function pruner:maskTaylor2(l_i,del_p)
+	--TODO
+	print('pruner:maskTaylor2: This module is under construction')
 	res = self.f_hessian(self.model) 
 		local dbg = require 'debugger'
 	dbg()
@@ -160,8 +164,30 @@ function pruner:maskTaylor2(l_i,del_p)
 end
 
 function pruner:maskTaylor1(l_i,del_p)
+	print('pruner:maskTaylor1: This module is under construction')
 	local scores = isCuda(self.model:get(l_i).weight:clone())
+	res = self.f_hessian(self.model) 
 	scores:cmul(self.model:get(l_i).gradWeight)
+	print(scores[1])
+	print(self.model:get(l_i).weight[1])
 	return self:getPercentage(scores,del_p)
+end
+
+function pruner:maskEmprical(l_i,del_p)
+	scores = isCuda(self.model:get(l_i).weight:clone():fill(0))
+	scores_view = scores:view(-1)
+    vector_view = self.model:get(l_i).weight:view(-1)
+	for i=1,vector_view:size(1) do
+	    t = vector_view[i]
+	    vector_view[i]=0
+		_,scores_view[i] = self.f_test(self.model) 
+	    vector_view[i]=t
+	end
+	print('maskEmprical!')
+	print(scores)
+	scores=scores:max()-scores
+	print(scores)
+	mask = self:getPercentage(scores,del_p)
+	return mask
 end
 return pruner
