@@ -24,14 +24,14 @@ function pruner:setVariables(model,f_pruner,f_train,f_test,f_hessian)
 	self.IMPORTANCE_INIT = 1
 end
 
-function pruner:prune(layer_nos,param)
+function pruner:pruneLayers(layer_nos,param)
 	local perc = torch.Tensor(#layer_nos)
 	for i=1,#layer_nos do
 		local mask = self:f_pruner(layer_nos[i],param[i])
 		self.model:get(layer_nos[i]):setMask(mask)
 		local retained = torch.sum(mask)/torch.numel(mask)
 	    if verbose then
-	    	print('Module'..layer_nos[i] ..': '.. retained*100 ..'% retained')
+	    	print('Layer'..layer_nos[i] ..': '.. retained*100 ..'% retained')
 	    end
 	    perc[i] = retained
 	end
@@ -39,9 +39,25 @@ function pruner:prune(layer_nos,param)
 	return perc , res
 end
 
+function pruner:pruneLayer(layer_no,p)
+	local mask = self:f_pruner(layer_no,p)
+	local oldmask = self.model:get(layer_no).mask
+	self.model:get(layer_no):setMask(mask)
+	local retained = torch.sum(mask)/torch.numel(mask)
+    if verbose then
+    	print('Module'.. layer_no ..': '.. retained*100 ..'% retained')
+    end
+	local res = self.f_test(self.model)
+	return retained , res, oldmask
+end
+
+function pruner:revertMask(layer_no,mask)
+	self.model:get(layer_no):setMask(mask)
+	local retained = torch.sum(mask)/torch.numel(mask)
+	return retained
+end
+
 function pruner:reTrainAndTest(nEpochs)
-	local dbg = require 'debugger'
-	dbg()
 	return self.f_test(self.f_train(self.model,nEpochs))
 end
 

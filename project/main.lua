@@ -136,28 +136,42 @@ function TrainModel(given_model,n_epoch)
     return given_model
 end
 
-
+local init_acc = TestModel(model)
 local pruner = require('utils.pruner')
 local prunerFunc = ((opt.pruner =='taylor1') and pruner.maskTaylor1) or ((opt.pruner =='taylor2') and pruner.maskTaylor2) or ((opt.pruner =='l1') and pruner.maskL1) or ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
 assert(prunerFunc ~= nil, 'Pruner function can\'t set, fix the code')
 pruner:setVariables(model,prunerFunc,TrainModel,TestModel,CalculateHessianValues)
-if opt.LSP ~= 0 then
-    plot_file = assert(io.open(opt.logDir ..'/'..opt.jobID.."-".. opt.l[1]..".plotlog", "w"))
-    plot_file:write("Retained%,TestError\n")
-    for i=0,1,1/opt.LSP do
-        retained,acc = pruner:prune(opt.l,{i})
+
+i=1
+plot_file = assert(io.open(opt.logDir ..'/'..opt.jobID..".plotlog", "w"))
+plot_file:write("LayerNo,Retained%,TestError\n")
+
+while i <= opt.iPruning do
+    local current_p
+    for l,p in pairs(opt.l) do
+        current_p = (p/opt.iPruning)*i
+        retained,acc,oldmask = pruner:pruneLayer(l,current_p)
         if opt.reTrain then
-            acc = pruner:reTrainAndTest(opt.nEpochs)
+            if opt.reLoad then
+                pruner.model = isCuda(torch.load('inp/'..opt.model..'.t7'))
+            end
+        acc = pruner:reTrainAndTest(opt.nEpochs)
         end
-        plot_file:write(retained[1] .. ",".. acc .."\n")
+        if acc<(init_acc-opt.acctradeoff) then --We can't tolerate that
+            pruner:revertMask(l,oldmask)
+            if opt.verbose then
+                print('@ Layer '..l..': stopped pruning since drop in accuracy exceeded threshold provided' )
+            end
+            opt.l[l] = nil -- So we are done with pruning this layer.
+            plot_file:write(l.. ",stop\n")
+        else
+            plot_file:write(l.. ","..retained .. ",".. acc .."\n")
+        end
     end
-    plot_file:close()
-else
-    pruner:prune(opt.l,opt.p)
-    if opt.reTrain then
-        pruner:reTrainAndTest(opt.nEpochs)
-    end 
+    i = i + 1
 end
+plot_file:close()
+
 
 --print(pruner:calculateCompression())
 model:clearState()

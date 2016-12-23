@@ -1,6 +1,5 @@
 local M = {}
 
-
 local function split(str, sep)
     sep = sep or ','
     fields={}
@@ -27,7 +26,11 @@ function readConf(path, sep, tonum)
         table.insert(csvFile, fields)
     end
     file:close()
-    return csvFile[1],csvFile[2]
+    res = {}
+    for i=1,#csvFile[1] do
+        res[csvFile[1][i]] = csvFile[2][i]
+    end
+    return res
 end
 
 
@@ -44,7 +47,9 @@ function M.parse(arg)
     cmd:option('-momentum',         0.9,            'momentum')
     cmd:option('-logDir',          'logs',         'log directory')
     cmd:option('-reTrain',          false,         'log directory')
-    cmd:option('-LSP',              0,          'layer Sensitivity Precision(LSP). Creates sensitivity values for pruning percantages got 20 times between [1,20]')
+    cmd:option('-reLoad',           false,         'log directory')
+    cmd:option('-acctradeoff',     100,          'stops pruning if accuracy decreases more then \'acctradeoff\' ' )
+    cmd:option('-iPruning',         1,          'Number of pruning steps until the target percentage reached')
     cmd:option('-pruner',           'mag',          '\'mag\',\'taylor2\',\'taylor12\',\'taylor1\', \'l2 \' and \' l1\'')
     cmd:option('-l',                0,            'layer-id to be pruned')
     cmd:option('-p',                0,            'percentage to be pruned')
@@ -60,10 +65,9 @@ function M.parse(arg)
     --     opt.layer-ids
 
     if opt.l > 0 then
-        opt.l = {opt.l}
-        opt.p = {opt.p}
+        opt.l = {[opt.l] = opt.p}
     else
-        opt.l , opt.p = readConf('inp/'..opt.model..'.conf')
+        opt.l = readConf('inp/'..opt.model..'.conf')
     end
     return opt
 end
