@@ -188,7 +188,7 @@ plot_file:close()
 
 --print(pruner:calculateCompression())
 model:clearState()
-torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned', model)
+torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned', model:float())
 
 
 
