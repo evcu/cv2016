@@ -57,7 +57,7 @@ local testDataset = tnt.ListDataset{
 }
 local model
 if opt.test then
-    model = isCuda(torch.load('logs/'..opt.model..'.t7pruned'))
+    model = isCuda(torch.load('out/'..opt.model..'.t7pruned'))
 elseif opt.train then
     model = isCuda(require("models/".. opt.model))
 else
@@ -141,7 +141,7 @@ function TrainModel(given_model,n_epoch)
     return given_model
 end
 
-local init_acc = TestModel(model)
+local init_err = TestModel(model)
 local pruner = require('utils.pruner')
 
 local prunerFunc = ((opt.pruner =='emp') and pruner.maskEmprical) or ((opt.pruner =='taylor1') and pruner.maskTaylor1) or ((opt.pruner =='taylor2') and pruner.maskTaylor2) or ((opt.pruner =='l1') and pruner.maskL1) or ((opt.pruner =='l2') and pruner.maskL2) or ((opt.pruner =='mag') and pruner.maskPercentage) or nil
@@ -150,7 +150,7 @@ pruner:setVariables(model,prunerFunc,TrainModel,TestModel,CalculateHessianValues
 
 if opt.test then
     print('Total Compression: '..pruner:calculateCompression())
-    print('Accuracy: '..init_acc)
+    print('Error: '..init_err)
     os.exit()
 end
 
@@ -169,7 +169,7 @@ while i <= opt.iPruning do
                 pruner.model = isCuda(torch.load('inp/'..opt.model..'.t7'))
             end
         end
-        if acc<(init_acc-opt.acctradeoff) then --We can't tolerate that
+        if acc<(init_err-opt.acctradeoff) then --We can't tolerate that
             pruner:revertMask(l,oldmask)
             if opt.verbose then
                 print('@ Layer '..l..': stopped pruning since drop in accuracy exceeded threshold provided' )
@@ -188,7 +188,7 @@ plot_file:close()
 
 --print(pruner:calculateCompression())
 model:clearState()
-torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned', model:float())
+torch.save(opt.logDir ..'/'.. opt.model..'.t7pruned', model:double())
 
 
 
