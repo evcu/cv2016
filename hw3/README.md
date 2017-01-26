@@ -1,5 +1,7 @@
 ## Traffic Sign Detection Kaggle Competition
 
+For the results and report see my [ipython notebook](https://github.com/evcu/cv2016/blob/master/hw3/notebooks/Computer%20Vision%20HW3%20Report.ipynb)
+
 In the last assignment of Computer Vision Class at 2016 Fall. We participated in a Kaggle competition with the rest of the class on the [The German Traffic Sign Recognition Benchmark](http://benchmark.ini.rub.de/?section=gtsrb&subsection=news). The objective was to produce a model that gives the highest possible accuracy on the test portion of this dataset. 
 
 The benchmark is well researched and there are kwown architectures that gets below 1 percent error. I share in this post my experience with different Conv-Net architectures and Torch on HPC of NYU. 
