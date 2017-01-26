@@ -11,7 +11,7 @@ mkdir logs/
 ```
 Ensure that you have torch library. One can run `module load torch/gnu/20160623` to get environment set in NYU's HPC Mercer.
 
-There is one pretrained `lenet5.t7` model provided in `inp/` folder. Once can use `qlua train.lua` command and its various flags to train a new model, but we will use the provided pretrained model.
+There is one pretrained `lenet5.t7` model provided in `inp/` folder. One can use `qlua train.lua` command and its various flags to train a new model, but we will use the provided pretrained model.
 
 One can perform layer-wise prunning with `-l` flag represents the layar-index in the model provided and `-p` represents the percentage to be prunned. One should get a result similar to.
 ```
